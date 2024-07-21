@@ -1,0 +1,6 @@
+.game-area {
+    flex: 1;
+    background-color: #ecf0f1;
+    padding: 20px;
+    box-sizing: border-box;
+}
