@@ -1,14 +1,24 @@
 import React from 'react';
 
-const GameArea = ({ playerHand, dealerHand, playerHandValue, dealerHandValue, result }) => {
+const GameArea = ({ playerHand, dealerHand, playerHandValue, dealerHandValue, result, dealerSecondCardHidden, calculateHandValue }) => {
     const cardValueMap = {
         '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
         'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace'
     };
 
-    const renderCard = (card) => {
+    const renderCard = (card, index) => {
         const cardValue = cardValueMap[card.value];
         const cardImage = `${cardValue}_of_${card.suit}.png`;
+        if (index === 1 && dealerSecondCardHidden) {
+            return (
+                <img
+                    key={`hidden_card`}
+                    src={`${process.env.PUBLIC_URL}/cards/back.png`}
+                    alt="Hidden Card"
+                    className="card"
+                />
+            );
+        }
         return (
             <img
                 key={`${card.value}_of_${card.suit}`}
@@ -24,10 +34,10 @@ const GameArea = ({ playerHand, dealerHand, playerHandValue, dealerHandValue, re
             <div className="dealer-area">
                 <h2>Dealer's Hand</h2>
                 <div className="hand">
-                    {dealerHand.map((card) => renderCard(card))}
+                    {dealerHand.map((card, index) => renderCard(card, index))}
                 </div>
                 <div className="hand-value">
-                    {dealerHandValue}
+                    {dealerSecondCardHidden && dealerHand.length > 0 ? calculateHandValue([dealerHand[0]]) : dealerHandValue}
                 </div>
             </div>
             <div className="player-area">

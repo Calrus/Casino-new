@@ -44,7 +44,8 @@
     margin-bottom: 20px;
 }
 
-.action-button {
+.action-button,
+.bet-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -57,7 +58,8 @@
     border-radius: 5px;
 }
 
-.action-button svg {
+.action-button svg,
+.bet-button svg {
     margin-right: 5px;
 }
 
@@ -78,6 +80,13 @@
     width: 100%;
 }
 
+.button-disabled {
+    background-color: #7f8c8d;
+    /* Darker color for disabled state */
+    cursor: not-allowed;
+    /* Change cursor to indicate the button is not clickable */
+}
+
 .game-area {
     display: flex;
     flex-direction: column;
@@ -90,20 +99,22 @@
 
 .dealer-area,
 .player-area {
-    flex: 1;
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
     margin: 10px 0;
     background-color: #ecf0f1;
     border: 1px solid #bdc3c7;
     border-radius: 5px;
-    text-align: center;
-    width: 100%;
+    padding: 20px;
     position: relative;
 }
 
 .hand {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .card {

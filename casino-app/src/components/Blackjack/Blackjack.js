@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BetSection from './BetSection';
 import ActionButtons from './ActionButtons';
 import GameArea from './GameArea';
-import TopBar from '../TopBar'; // Ensure correct import
+import TopBar from '../TopBar';
 import './Blackjack.css';
 
 const Blackjack = () => {
@@ -13,6 +13,7 @@ const Blackjack = () => {
     const [betAmount, setBetAmount] = useState(0);
     const [result, setResult] = useState('');
     const [balance, setBalance] = useState(1000); // Initial balance
+    const [dealerSecondCardHidden, setDealerSecondCardHidden] = useState(true); // Track if dealer's second card is hidden
 
     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
     const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
@@ -53,6 +54,7 @@ const Blackjack = () => {
         setDealerHand(dealerCards);
         setGameStatus('playing');
         setResult('');
+        setDealerSecondCardHidden(true);
     };
 
     const handleBet = () => {
@@ -70,26 +72,52 @@ const Blackjack = () => {
     };
 
     const handleHit = () => {
-        setPlayerHand((prevHand) => [...prevHand, drawCard()]);
+        setPlayerHand((prevHand) => {
+            const newHand = [...prevHand, drawCard()];
+            return newHand;
+        });
     };
+
+    useEffect(() => {
+        const playerHandValue = calculateHandValue(playerHand);
+        console.log('Player Hand:', playerHand);
+        console.log('Player Hand Value:', playerHandValue);
+        if (playerHandValue > 21) {
+            setResult('Player Busts!');
+            setGameStatus('finished');
+            setDealerSecondCardHidden(false); // Reveal dealer's second card
+            setGameStatus('betting'); // Reset to betting state after the game is finished
+        }
+    }, [playerHand]);
 
     const handleStand = () => {
-        let dealerValue = calculateHandValue(dealerHand);
-        while (dealerValue < 17) {
-            setDealerHand((prevHand) => {
-                const newHand = [...prevHand, drawCard()];
-                dealerValue = calculateHandValue(newHand);
-                return newHand;
-            });
-        }
-        determineResult();
+        setDealerSecondCardHidden(false); // Reveal dealer's second card
+        const dealerPlay = (currentHand) => {
+            const dealerValue = calculateHandValue(currentHand);
+            console.log('Dealer Hand:', currentHand);
+            console.log('Dealer Hand Value:', dealerValue);
+            if (dealerValue < 17) {
+                const newHand = [...currentHand, drawCard()];
+                setDealerHand(newHand);
+                dealerPlay(newHand);
+            } else {
+                setDealerHand(currentHand);
+                determineResult(currentHand);
+            }
+        };
+        dealerPlay(dealerHand);
     };
 
-    const determineResult = () => {
+    const determineResult = (finalDealerHand) => {
         const playerValue = calculateHandValue(playerHand);
-        const dealerValue = calculateHandValue(dealerHand);
+        const dealerValue = calculateHandValue(finalDealerHand);
 
-        if (dealerValue > 21 || playerValue > dealerValue) {
+        console.log('Final Player Value:', playerValue);
+        console.log('Final Dealer Value:', dealerValue);
+
+        if (playerValue > 21) {
+            setResult('Player Busts!');
+        } else if (dealerValue > 21 || playerValue > dealerValue) {
             setResult('Player Wins!');
             setBalance(balance + playerBet * 2);
         } else if (playerValue < dealerValue) {
@@ -98,22 +126,34 @@ const Blackjack = () => {
             setResult('Push!');
             setBalance(balance + playerBet);
         }
-        setGameStatus('finished');
+        setGameStatus('betting'); // Reset to betting state after the game is finished
     };
 
     return (
         <div className="blackjack">
             <TopBar balance={balance} />
             <div className="controls">
-                <BetSection betAmount={betAmount} onBetChange={handleBetChange} />
-                <ActionButtons onHit={handleHit} onStand={handleStand} onPlaceBet={handleBet} />
+                <BetSection
+                    betAmount={betAmount}
+                    onBetChange={handleBetChange}
+                    disabled={gameStatus !== 'betting'}
+                />
+                <ActionButtons
+                    onHit={handleHit}
+                    onStand={handleStand}
+                    onPlaceBet={handleBet}
+                    betDisabled={gameStatus !== 'betting'}
+                    actionDisabled={gameStatus !== 'playing'}
+                />
             </div>
             <GameArea
                 playerHand={playerHand}
                 dealerHand={dealerHand}
                 playerHandValue={calculateHandValue(playerHand)}
-                dealerHandValue={calculateHandValue(dealerHand)}
+                dealerHandValue={dealerHand.length ? calculateHandValue(dealerHand) : 0}
                 result={result}
+                dealerSecondCardHidden={dealerSecondCardHidden}
+                calculateHandValue={calculateHandValue} // Pass the function to GameArea
             />
         </div>
     );
