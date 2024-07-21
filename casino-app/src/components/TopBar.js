@@ -3,7 +3,7 @@ import { FaUserCircle } from 'react-icons/fa';
 import { AiOutlineDollar } from 'react-icons/ai';
 import './TopBar.css';
 
-const TopBar = () => {
+const TopBar = ({ balance }) => {
     return (
         <div className="top-bar">
             <div className="left-section">
@@ -11,7 +11,7 @@ const TopBar = () => {
             </div>
             <div className="center-section">
                 <div className="balance-container">
-                    <AiOutlineDollar /> 1000
+                    <AiOutlineDollar /> {balance}
                 </div>
             </div>
             <div className="right-section">

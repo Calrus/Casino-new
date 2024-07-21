@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GameArea = ({ playerHand, dealerHand }) => {
+const GameArea = ({ playerHand, dealerHand, playerHandValue, dealerHandValue, result }) => {
     const cardValueMap = {
         '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
         'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace'
@@ -26,13 +26,20 @@ const GameArea = ({ playerHand, dealerHand }) => {
                 <div className="hand">
                     {dealerHand.map((card) => renderCard(card))}
                 </div>
+                <div className="hand-value">
+                    {dealerHandValue}
+                </div>
             </div>
             <div className="player-area">
                 <h2>Player's Hand</h2>
                 <div className="hand">
                     {playerHand.map((card) => renderCard(card))}
                 </div>
+                <div className="hand-value">
+                    {playerHandValue}
+                </div>
             </div>
+            {result && <div className="result">{result}</div>}
         </div>
     );
 };
