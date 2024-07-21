@@ -5,12 +5,17 @@ const Register = () => {
     const { register } = useContext(AccountContext);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-    const handleRegister = () => {
-        console.log('Registering user:', username);
-        register(username, password);
-        setUsername('');
-        setPassword('');
+    const handleRegister = async () => {
+        try {
+            await register(username, password);
+            setUsername('');
+            setPassword('');
+            setErrorMessage(''); // Clear any previous error message
+        } catch (error) {
+            setErrorMessage(error.message);
+        }
     };
 
     return (
@@ -29,6 +34,7 @@ const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
             />
             <button onClick={handleRegister}>Register</button>
+            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         </div>
     );
 };

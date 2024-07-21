@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 import axios from 'axios';
 
 const AccountContext = createContext();
@@ -6,29 +6,18 @@ const AccountContext = createContext();
 export const AccountProvider = ({ children }) => {
     const [account, setAccount] = useState(null);
 
-    useEffect(() => {
-        // Fetch account details when the component mounts
-        const fetchAccountDetails = async () => {
-            if (account && account.username) {
-                try {
-                    const response = await axios.get(`http://localhost:3001/account/${account.username}`);
-                    setAccount({ username: account.username, balance: response.data.balance });
-                } catch (error) {
-                    console.error('Error fetching account details:', error.response ? error.response.data : error.message);
-                }
-            }
-        };
-
-        fetchAccountDetails();
-    }, []);
-
     const register = async (username, password) => {
         try {
             await axios.post('http://localhost:3001/register', { username, password });
             setAccount({ username, balance: 1000 });
             console.log('Registration successful');
         } catch (error) {
-            console.error('Registration error:', error.response ? error.response.data : error.message);
+            if (error.response && error.response.status === 400) {
+                throw new Error('Username already exists');
+            } else {
+                console.error('Registration error:', error.response ? error.response.data : error.message);
+                throw new Error('Registration failed');
+            }
         }
     };
 

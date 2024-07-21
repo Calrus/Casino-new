@@ -27,6 +27,16 @@ app.post('/register', (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
+    if (db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
+        if (err) {
+            console.error('Error fetching user:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        return row;
+    })) {
+        return res.status(400).json({ message: 'User already exists' });
+    }
+
     db.run('INSERT INTO users (username, password, balance) VALUES (?, ?, ?)', [username, hashedPassword, 1000], function (err) {
         if (err) {
             console.error('Error inserting user:', err.message);
