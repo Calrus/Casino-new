@@ -1,18 +1,25 @@
 import React from 'react';
 import './App.css';
-import Sidebar from './components/SideBar';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import SideBar from './components/SideBar';
 import TopBar from './components/TopBar';
-import GameArea from './components/GameArea';
+import Blackjack from './components/Blackjack/Blackjack';
 
 function App() {
   return (
-    <div className="app">
-      <Sidebar />
-      <div className="main-content">
-        <TopBar />
-        <GameArea />
+    <Router>
+      <div className="app">
+        <SideBar />
+        <div className="main-content">
+          <TopBar />
+          <Routes>
+            <Route path="/blackjack" element={<Blackjack />} />
+            {/* Add routes for other games here */}
+            <Route path="/" element={<div>Select a game from the sidebar</div>} />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </Router>
   );
 }
 

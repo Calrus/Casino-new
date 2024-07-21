@@ -1,17 +1,19 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './SideBar.css';
 
-const SideBar = () => {
+const Sidebar = () => {
     return (
         <div className="sidebar">
             <div className="logo">Casino App</div>
             <ul>
-                <li>Game 1</li>
-                <li>Game 2</li>
-                <li>Game 3</li>
+                <li>
+                    <Link to="/blackjack">Blackjack</Link>
+                </li>
+                {/* Add other game links here */}
             </ul>
         </div>
     );
 };
 
-export default SideBar;
+export default Sidebar;

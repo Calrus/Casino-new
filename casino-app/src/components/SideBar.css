@@ -18,5 +18,14 @@
 
 .sidebar ul li {
     margin: 10px 0;
-    cursor: pointer;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #34495e;
 }

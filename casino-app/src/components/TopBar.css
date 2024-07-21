@@ -1,39 +1,63 @@
 .top-bar {
     height: 60px;
+    width: calc(100% - 200px);
+    /* Adjust width to account for sidebar */
     background-color: #34495e;
     color: white;
     display: flex;
+    justify-content: space-between;
     align-items: center;
     padding: 0 20px;
     box-sizing: border-box;
-    position: relative;
+    position: fixed;
+    /* Make the top bar fixed */
+    top: 0;
+    /* Position it at the top */
+    left: 200px;
+    /* Offset to align with the sidebar */
+    z-index: 1000;
+    /* Ensure it is below the sidebar */
+}
+
+.left-section,
+.center-section,
+.right-section {
+    display: flex;
+    align-items: center;
+}
+
+.left-section {
+    flex: 1;
+}
+
+.center-section {
+    flex: 1;
+    justify-content: center;
+    display: flex;
+}
+
+.right-section {
+    flex: 1;
+    justify-content: flex-end;
+    display: flex;
+}
+
+.logo {
+    font-size: 24px;
 }
 
 .balance-container {
     display: flex;
-    justify-content: center;
     align-items: center;
-    border: 2px solid white;
-    /* Add border only to balance container */
+    background-color: #2c3e50;
     padding: 5px 10px;
-    /* Add padding */
     border-radius: 5px;
-    /* Optional: add rounded corners */
-    margin: 0 auto;
-    /* Center the balance container */
 }
 
-.balance {
-    display: flex;
-    align-items: center;
-}
-
-.balance svg {
+.balance-container svg {
     margin-right: 5px;
 }
 
 .profile {
     cursor: pointer;
-    position: absolute;
-    right: 20px;
 }

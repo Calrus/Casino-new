@@ -1,0 +1,101 @@
+.blackjack {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 20%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.bet-section {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.bet-section label {
+    margin-right: 10px;
+}
+
+.bet-section input {
+    width: 100%;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.action-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #34495e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.action-button svg {
+    margin-right: 5px;
+}
+
+.bet-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.bet-button {
+    padding: 15px 30px;
+    font-size: 18px;
+    cursor: pointer;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.game-area {
+    display: flex;
+    flex-direction: column;
+    flex: 4;
+    padding: 20px;
+    box-sizing: border-box;
+    align-items: center;
+}
+
+.dealer-area,
+.player-area {
+    flex: 1;
+    padding: 20px;
+    margin: 10px 0;
+    background-color: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    text-align: center;
+    width: 80%;
+}
