@@ -3,16 +3,22 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
-app.use(cors()); // Enable CORS
+app.use(cors());
 app.use(bodyParser.json());
 
-// Set up the SQLite database
-const db = new sqlite3.Database('./users.db'); // Use a file-based database
+const SECRET_KEY = "secret";
+
+const db = new sqlite3.Database('./users.db');
 
 db.serialize(() => {
-    db.run('CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT, balance INTEGER)', (err) => {
+    db.run('CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE, password TEXT, balance INTEGER)', (err) => {
         if (err) {
             console.error('Error creating users table:', err.message);
         } else {
@@ -21,33 +27,31 @@ db.serialize(() => {
     });
 });
 
-// Register a new user
+app.use(session({
+    secret: SECRET_KEY,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
+
 app.post('/register', (req, res) => {
     const { username, password } = req.body;
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    if (db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
-        if (err) {
-            console.error('Error fetching user:', err.message);
-            return res.status(500).json({ error: err.message });
-        }
-        return row;
-    })) {
-        return res.status(400).json({ message: 'User already exists' });
-    }
-
     db.run('INSERT INTO users (username, password, balance) VALUES (?, ?, ?)', [username, hashedPassword, 1000], function (err) {
         if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'Username already exists' });
+            }
             console.error('Error inserting user:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        console.log('User registered:', username, hashedPassword); // Log registration
+        console.log('User registered:', username, hashedPassword);
         res.status(201).json({ message: 'User registered successfully' });
     });
 });
 
-// Login a user
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
@@ -56,17 +60,135 @@ app.post('/login', (req, res) => {
             console.error('Error fetching user:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        console.log('User found:', row); // Log user data
         if (row && bcrypt.compareSync(password, row.password)) {
-            res.json({ message: 'Login successful', balance: row.balance });
+            const token = jwt.sign({ username: row.username }, SECRET_KEY, { expiresIn: '1h' });
+            res.json({ message: 'Login successful', token, balance: row.balance });
         } else {
             res.status(401).json({ message: 'Invalid username or password' });
         }
     });
 });
 
-// Get account details
-app.get('/account/:username', (req, res) => {
+const authenticateJWT = (req, res, next) => {
+    const token = req.headers.authorization.split(' ')[1];
+    if (token) {
+        jwt.verify(token, SECRET_KEY, (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
+
+const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+const drawCard = () => {
+    const suit = suits[Math.floor(Math.random() * suits.length)];
+    const value = values[Math.floor(Math.random() * values.length)];
+    return { suit, value: value === 'A' ? 11 : ['K', 'Q', 'J'].includes(value) ? 10 : parseInt(value, 10) };
+};
+
+const calculateHandValue = (hand) => {
+    let value = 0;
+    let numAces = 0;
+
+    hand.forEach(card => {
+        if (card.value === 11) {
+            numAces += 1;
+            value += 11;
+        } else {
+            value += card.value;
+        }
+    });
+
+    while (value > 21 && numAces > 0) {
+        value -= 10;
+        numAces -= 1;
+    }
+
+    return value;
+};
+
+const dealInitialCards = () => {
+    const playerHand = [drawCard(), drawCard()];
+    const dealerHand = [drawCard(), drawCard()];
+    return { playerHand, dealerHand };
+};
+
+app.post('/start-game', authenticateJWT, (req, res) => {
+    const { playerHand, dealerHand } = dealInitialCards();
+    req.session.playerHand = playerHand;
+    req.session.dealerHand = dealerHand;
+    req.session.save(err => {
+        if (err) {
+            console.error('Error saving session:', err);
+            return res.status(500).json({ error: 'Failed to save session' });
+        }
+        console.log('Game started: ', req.session); // Log session data
+        res.json({ playerHand, dealerHand: [dealerHand[0], { suit: 'hidden', value: 'hidden' }] });
+    });
+});
+
+app.post('/hit', authenticateJWT, (req, res) => {
+    console.log('Session data on hit: ', req.session); // Log session data
+    if (!req.session.playerHand) {
+        return res.status(400).json({ error: 'Game not started' });
+    }
+    const { playerHand } = req.session;
+    playerHand.push(drawCard());
+    req.session.playerHand = playerHand;
+    req.session.save(err => {
+        if (err) {
+            console.error('Error saving session:', err);
+            return res.status(500).json({ error: 'Failed to save session' });
+        }
+        const playerHandValue = calculateHandValue(playerHand);
+        if (playerHandValue > 21) {
+            res.json({ playerHand, result: 'Player Busts!' });
+        } else {
+            res.json({ playerHand });
+        }
+    });
+});
+
+app.post('/stand', authenticateJWT, (req, res) => {
+    console.log('Session data on stand: ', req.session); // Log session data
+    if (!req.session.playerHand || !req.session.dealerHand) {
+        return res.status(400).json({ error: 'Game not started' });
+    }
+    const { playerHand, dealerHand } = req.session;
+    while (calculateHandValue(dealerHand) < 17) {
+        dealerHand.push(drawCard());
+    }
+    req.session.dealerHand = dealerHand;
+    req.session.save(err => {
+        if (err) {
+            console.error('Error saving session:', err);
+            return res.status(500).json({ error: 'Failed to save session' });
+        }
+        const playerHandValue = calculateHandValue(playerHand);
+        const dealerHandValue = calculateHandValue(dealerHand);
+
+        let result;
+        if (playerHandValue > 21) {
+            result = 'Player Busts!';
+        } else if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
+            result = 'Player Wins!';
+        } else if (playerHandValue < dealerHandValue) {
+            result = 'Dealer Wins!';
+        } else {
+            result = 'Push!';
+        }
+        res.json({ playerHand, dealerHand, result });
+    });
+});
+
+app.get('/account/:username', authenticateJWT, (req, res) => {
     const { username } = req.params;
 
     db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
@@ -82,8 +204,7 @@ app.get('/account/:username', (req, res) => {
     });
 });
 
-// Update account balance
-app.put('/account/:username/balance', (req, res) => {
+app.put('/account/:username/balance', authenticateJWT, (req, res) => {
     const { username } = req.params;
     const { balance } = req.body;
 

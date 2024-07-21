@@ -6,7 +6,7 @@ casino-app-backend/node_modules
 casino-app/node_modules
 /.pnp
 .pnp.js
-/users.db
+casino-app-backend/users.db
 
 # testing
 /coverage
