@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import BetSection from './BetSection';
 import ActionButtons from './ActionButtons';
 import GameArea from './GameArea';
 import TopBar from '../TopBar';
+import AccountContext from '../Account/AccountContext';
 import './Blackjack.css';
 
 const Blackjack = () => {
@@ -12,7 +13,7 @@ const Blackjack = () => {
     const [gameStatus, setGameStatus] = useState('betting'); // 'betting', 'playing', 'finished'
     const [betAmount, setBetAmount] = useState(0);
     const [result, setResult] = useState('');
-    const [balance, setBalance] = useState(1000); // Initial balance
+    const { account, updateBalance } = useContext(AccountContext);
     const [dealerSecondCardHidden, setDealerSecondCardHidden] = useState(true); // Track if dealer's second card is hidden
 
     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
@@ -58,12 +59,12 @@ const Blackjack = () => {
     };
 
     const handleBet = () => {
-        if (betAmount > balance) {
+        if (betAmount > account.balance) {
             alert('Insufficient balance to place the bet.');
             return;
         }
         setPlayerBet(betAmount);
-        setBalance(balance - betAmount);
+        updateBalance(account.username, account.balance - betAmount);
         dealInitialCards();
     };
 
@@ -86,7 +87,6 @@ const Blackjack = () => {
             setResult('Player Busts!');
             setGameStatus('finished');
             setDealerSecondCardHidden(false); // Reveal dealer's second card
-            setGameStatus('betting'); // Reset to betting state after the game is finished
         }
     }, [playerHand]);
 
@@ -119,19 +119,19 @@ const Blackjack = () => {
             setResult('Player Busts!');
         } else if (dealerValue > 21 || playerValue > dealerValue) {
             setResult('Player Wins!');
-            setBalance(balance + playerBet * 2);
+            updateBalance(account.username, account.balance + playerBet * 2);
         } else if (playerValue < dealerValue) {
             setResult('Dealer Wins!');
         } else {
             setResult('Push!');
-            setBalance(balance + playerBet);
+            updateBalance(account.username, account.balance + playerBet);
         }
         setGameStatus('betting'); // Reset to betting state after the game is finished
     };
 
     return (
         <div className="blackjack">
-            <TopBar balance={balance} />
+            <TopBar balance={account ? account.balance : 0} />
             <div className="controls">
                 <BetSection
                     betAmount={betAmount}

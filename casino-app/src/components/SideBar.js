@@ -10,7 +10,12 @@ const Sidebar = () => {
                 <li>
                     <Link to="/blackjack">Blackjack</Link>
                 </li>
-                {/* Add other game links here */}
+                <li>
+                    <Link to="/login">Login</Link>
+                </li>
+                <li>
+                    <Link to="/register">Register</Link>
+                </li>
             </ul>
         </div>
     );
