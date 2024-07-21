@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AccountContext from './AccountContext';
 
 const Login = () => {
@@ -6,14 +7,19 @@ const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState(false);
+    const [loginSuccess, setLoginSuccess] = useState(false);
+    const navigate = useNavigate();
 
-    const handleLogin = () => {
-        const isSuccess = login(username, password);
+    const handleLogin = async () => {
+        const isSuccess = await login(username, password);
         if (isSuccess) {
             setLoginError(false);
-            // Handle successful login
+            setLoginSuccess(true);
+            // Redirect to home or another route
+            setTimeout(() => navigate('/'), 2000); // Redirect after 2 seconds
         } else {
             setLoginError(true);
+            setLoginSuccess(false);
         }
     };
 
@@ -34,6 +40,7 @@ const Login = () => {
             />
             <button onClick={handleLogin}>Login</button>
             {loginError && <p>Invalid username or password</p>}
+            {loginSuccess && <p>Login successful! Redirecting...</p>}
         </div>
     );
 };

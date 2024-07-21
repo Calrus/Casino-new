@@ -6,6 +6,7 @@ import TopBar from './components/TopBar';
 import Blackjack from './components/Blackjack/Blackjack';
 import Login from './components/Account/Login';
 import Register from './components/Account/Register';
+import UserInfo from './components/Account/UserInfo';
 import { AccountProvider } from './components/Account/AccountContext';
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
               <Route path="/blackjack" element={<Blackjack />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              {/* Add routes for other games here */}
+              <Route path="/userinfo" element={<UserInfo />} />
               <Route path="/" element={<div>Select a game from the sidebar</div>} />
             </Routes>
           </div>

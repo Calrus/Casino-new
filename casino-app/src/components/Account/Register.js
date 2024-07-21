@@ -7,6 +7,7 @@ const Register = () => {
     const [password, setPassword] = useState('');
 
     const handleRegister = () => {
+        console.log('Registering user:', username);
         register(username, password);
         setUsername('');
         setPassword('');

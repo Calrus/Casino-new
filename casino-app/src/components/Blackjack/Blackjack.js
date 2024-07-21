@@ -7,13 +7,13 @@ import AccountContext from '../Account/AccountContext';
 import './Blackjack.css';
 
 const Blackjack = () => {
+    const { account, updateBalance } = useContext(AccountContext);
     const [playerHand, setPlayerHand] = useState([]);
     const [dealerHand, setDealerHand] = useState([]);
     const [playerBet, setPlayerBet] = useState(0);
     const [gameStatus, setGameStatus] = useState('betting'); // 'betting', 'playing', 'finished'
     const [betAmount, setBetAmount] = useState(0);
     const [result, setResult] = useState('');
-    const { account, updateBalance } = useContext(AccountContext);
     const [dealerSecondCardHidden, setDealerSecondCardHidden] = useState(true); // Track if dealer's second card is hidden
 
     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
@@ -63,6 +63,10 @@ const Blackjack = () => {
             alert('Insufficient balance to place the bet.');
             return;
         }
+        if (betAmount <= 0) {
+            alert('Please enter a valid bet amount.');
+            return;
+        }
         setPlayerBet(betAmount);
         updateBalance(account.username, account.balance - betAmount);
         dealInitialCards();
@@ -89,6 +93,13 @@ const Blackjack = () => {
             setDealerSecondCardHidden(false); // Reveal dealer's second card
         }
     }, [playerHand]);
+
+    useEffect(() => {
+        if (gameStatus === 'finished') {
+            // Re-enable betting after game is finished
+            setGameStatus('betting');
+        }
+    }, [gameStatus]);
 
     const handleStand = () => {
         setDealerSecondCardHidden(false); // Reveal dealer's second card
@@ -126,7 +137,7 @@ const Blackjack = () => {
             setResult('Push!');
             updateBalance(account.username, account.balance + playerBet);
         }
-        setGameStatus('betting'); // Reset to betting state after the game is finished
+        setGameStatus('finished'); // Set game status to finished after determining result
     };
 
     return (

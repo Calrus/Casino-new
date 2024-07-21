@@ -2,15 +2,23 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
+const cors = require('cors');
 
 const app = express();
+app.use(cors()); // Enable CORS
 app.use(bodyParser.json());
 
 // Set up the SQLite database
-const db = new sqlite3.Database(':memory:');
+const db = new sqlite3.Database('./users.db'); // Use a file-based database
 
 db.serialize(() => {
-    db.run('CREATE TABLE users (username TEXT, password TEXT, balance INTEGER)');
+    db.run('CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT, balance INTEGER)', (err) => {
+        if (err) {
+            console.error('Error creating users table:', err.message);
+        } else {
+            console.log('Users table created or already exists.');
+        }
+    });
 });
 
 // Register a new user
@@ -21,8 +29,10 @@ app.post('/register', (req, res) => {
 
     db.run('INSERT INTO users (username, password, balance) VALUES (?, ?, ?)', [username, hashedPassword, 1000], function (err) {
         if (err) {
+            console.error('Error inserting user:', err.message);
             return res.status(500).json({ error: err.message });
         }
+        console.log('User registered:', username, hashedPassword); // Log registration
         res.status(201).json({ message: 'User registered successfully' });
     });
 });
@@ -33,8 +43,10 @@ app.post('/login', (req, res) => {
 
     db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
         if (err) {
+            console.error('Error fetching user:', err.message);
             return res.status(500).json({ error: err.message });
         }
+        console.log('User found:', row); // Log user data
         if (row && bcrypt.compareSync(password, row.password)) {
             res.json({ message: 'Login successful', balance: row.balance });
         } else {
@@ -49,6 +61,7 @@ app.get('/account/:username', (req, res) => {
 
     db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
         if (err) {
+            console.error('Error fetching user account:', err.message);
             return res.status(500).json({ error: err.message });
         }
         if (row) {
@@ -66,6 +79,7 @@ app.put('/account/:username/balance', (req, res) => {
 
     db.run('UPDATE users SET balance = ? WHERE username = ?', [balance, username], function (err) {
         if (err) {
+            console.error('Error updating balance:', err.message);
             return res.status(500).json({ error: err.message });
         }
         res.json({ message: 'Balance updated successfully' });

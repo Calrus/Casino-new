@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import { AiOutlineDollar } from 'react-icons/ai';
+import AccountContext from './Account/AccountContext';
 import './TopBar.css';
 
-const TopBar = ({ balance }) => {
+const TopBar = () => {
+    const { account } = useContext(AccountContext);
+    const navigate = useNavigate();
+
+    const handleProfileClick = () => {
+        navigate('/userinfo');
+    };
+
     return (
         <div className="top-bar">
             <div className="left-section">
@@ -11,11 +20,11 @@ const TopBar = ({ balance }) => {
             </div>
             <div className="center-section">
                 <div className="balance-container">
-                    <AiOutlineDollar /> {balance}
+                    <AiOutlineDollar /> {account ? account.balance : 'Loading...'}
                 </div>
             </div>
             <div className="right-section">
-                <div className="profile">
+                <div className="profile" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
                     <FaUserCircle size={30} />
                 </div>
             </div>
