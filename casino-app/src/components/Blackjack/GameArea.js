@@ -6,13 +6,15 @@ const calculateHandValue = (hand) => {
     let numAces = 0;
 
     hand.forEach(card => {
-        if (card.value === 'Ace') {
-            numAces += 1;
-            value += 11; // Initially count Ace as 11
-        } else if (['Jack', 'Queen', 'King'].includes(card.value)) {
-            value += 10; // Face cards are worth 10
-        } else {
-            value += parseInt(card.value, 10); // Ensure numeric value for other cards
+        if (card && card.value) {
+            if (card.value === 'Ace') {
+                numAces += 1;
+                value += 11; // Initially count Ace as 11
+            } else if (['Jack', 'Queen', 'King'].includes(card.value)) {
+                value += 10; // Face cards are worth 10
+            } else {
+                value += parseInt(card.value, 10); // Ensure numeric value for other cards
+            }
         }
     });
 
@@ -43,7 +45,7 @@ const GameArea = ({ playerHand, dealerHand, result, dealerSecondCardHidden }) =>
                 <div className="hand">
                     {dealerHand.map((card, index) => (
                         <div key={index} className="card">
-                            <img src={getCardImage(card)} alt={`${card.value} of ${card.suit}`} />
+                            <img src={getCardImage(card)} alt={`${card?.value} of ${card?.suit}`} />
                         </div>
                     ))}
                 </div>
@@ -56,7 +58,7 @@ const GameArea = ({ playerHand, dealerHand, result, dealerSecondCardHidden }) =>
                 <div className="hand">
                     {playerHand.map((card, index) => (
                         <div key={index} className="card">
-                            <img src={getCardImage(card)} alt={`${card.value} of ${card.suit}`} />
+                            <img src={getCardImage(card)} alt={`${card?.value} of ${card?.suit}`} />
                         </div>
                     ))}
                 </div>
