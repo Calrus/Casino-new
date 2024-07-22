@@ -31,13 +31,14 @@ const Blackjack = () => {
             const response = await axios.post('http://localhost:3001/start-game', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
+            console.log('Start game response:', response.data); // Log the response for debugging
             setPlayerHand(response.data.playerHand);
             setDealerHand(response.data.dealerHand);
             setGameStatus('playing');
             setResult('');
             setDealerSecondCardHidden(true);
         } catch (error) {
-            console.error('Error starting game:', error);
+            console.error('Error starting game:', error.response); // Log the error response
         } finally {
             setIsUpdating(false); // Enable buttons
         }
@@ -51,10 +52,13 @@ const Blackjack = () => {
         if (isUpdating) return; // Prevent quick successive clicks
         setIsUpdating(true); // Disable buttons
 
+        console.log(account.token);
+
         try {
             const response = await axios.post('http://localhost:3001/hit', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
+            console.log('Hit response:', response.data); // Log the response for debugging
             setPlayerHand(response.data.playerHand);
             if (response.data.result) {
                 setResult(response.data.result);
@@ -62,7 +66,7 @@ const Blackjack = () => {
                 setDealerSecondCardHidden(false);
             }
         } catch (error) {
-            console.error('Error hitting:', error);
+            console.error('Error hitting:', error.response); // Log the error response
         } finally {
             setIsUpdating(false); // Enable buttons
         }
@@ -76,13 +80,13 @@ const Blackjack = () => {
             const response = await axios.post('http://localhost:3001/stand', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
-            console.log('Stand response:', response.data);
+            console.log('Stand response:', response.data); // Log the response for debugging
             setPlayerHand(response.data.playerHand);
             setDealerHand(response.data.dealerHand);
             setResult(response.data.result);
             setGameStatus('finished');
         } catch (error) {
-            console.error('Error standing:', error);
+            console.error('Error standing:', error.response); // Log the error response
         } finally {
             setIsUpdating(false); // Enable buttons
         }

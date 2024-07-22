@@ -27,7 +27,7 @@ export const AccountProvider = ({ children }) => {
             console.log('Login response:', response.data);
             const { token, balance } = response.data;
             setAccount({ username, balance, token });
-            axios.defaults.headers.common['Authorization'] = token; // Set default header
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Set default header with 'Bearer'
             return true;
         } catch (error) {
             console.error('Login error:', error.response ? error.response.data : error.message);
@@ -37,7 +37,9 @@ export const AccountProvider = ({ children }) => {
 
     const updateBalance = async (username, balance) => {
         try {
-            await axios.put(`http://localhost:3001/account/${username}/balance`, { balance });
+            await axios.put(`http://localhost:3001/account/${username}/balance`, { balance }, {
+                headers: { Authorization: `Bearer ${account.token}` } // Ensure token is included
+            });
             setAccount((prevAccount) => ({ ...prevAccount, balance }));
         } catch (error) {
             console.error('Update balance error:', error.response ? error.response.data : error.message);

@@ -32,8 +32,24 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false } // Set to true if using HTTPS
-
 }));
+
+const authenticateJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, SECRET_KEY, (err, user) => {
+            if (err) {
+                console.error('Token verification failed:', err.message);
+                return res.sendStatus(403);
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
 
 app.post('/register', (req, res) => {
     const { username, password } = req.body;
@@ -70,43 +86,27 @@ app.post('/login', (req, res) => {
     });
 });
 
-const authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
-        jwt.verify(token, SECRET_KEY, (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-            req.user = user;
-            next();
-        });
-    } else {
-        res.sendStatus(401);
-    }
-};
-
 const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
-const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
 
 const drawCard = () => {
     const suit = suits[Math.floor(Math.random() * suits.length)];
     const value = values[Math.floor(Math.random() * values.length)];
-    return { suit, value: value === 'A' ? 'Ace' : ['K', 'Q', 'J'].includes(value) ? 10 : parseInt(value, 10) };
+    return { suit, value };
 };
-
 
 const calculateHandValue = (hand) => {
     let value = 0;
     let numAces = 0;
 
-    // First, calculate the initial value and count the number of Aces
     hand.forEach(card => {
         if (card.value === 'Ace') {
             numAces += 1;
             value += 11; // Initially count Ace as 11
+        } else if (['Jack', 'Queen', 'King'].includes(card.value)) {
+            value += 10; // Face cards are worth 10
         } else {
-            value += card.value;
+            value += parseInt(card.value, 10); // Ensure numeric value for other cards
         }
     });
 
@@ -118,7 +118,6 @@ const calculateHandValue = (hand) => {
 
     return value;
 };
-
 
 const dealInitialCards = () => {
     const playerHand = [drawCard(), drawCard()];
@@ -141,11 +140,12 @@ app.post('/start-game', authenticateJWT, (req, res) => {
 });
 
 app.post('/hit', authenticateJWT, (req, res) => {
-    console.log('Session data on hit: ', req.session); // Log session data
-    if (!req.session.playerHand) {
-        return res.status(400).json({ error: 'Game not started' });
+    console.log('Session data on hit:', req.session); // Log session data
+    if (!req.session.playerHand || !Array.isArray(req.session.playerHand)) {
+        console.error('No playerHand in session or invalid data');
+        return res.status(400).json({ error: 'Game not started or session data corrupted' });
     }
-    const { playerHand } = req.session;
+    const playerHand = req.session.playerHand;
     playerHand.push(drawCard());
     req.session.playerHand = playerHand;
     req.session.save(err => {
@@ -163,12 +163,13 @@ app.post('/hit', authenticateJWT, (req, res) => {
 });
 
 app.post('/stand', authenticateJWT, (req, res) => {
-    console.log('Stand endpoint hit'); // Debugging line
-    console.log('Session data on stand: ', req.session.playerHand); // Log session data
-    if (!req.session.playerHand || !req.session.dealerHand) {
-        return res.status(400).json({ error: 'Game not started' });
+    console.log('Session data on stand:', req.session); // Log session data
+    if (!req.session.playerHand || !req.session.dealerHand || !Array.isArray(req.session.playerHand) || !Array.isArray(req.session.dealerHand)) {
+        console.error('No playerHand or dealerHand in session or invalid data');
+        return res.status(400).json({ error: 'Game not started or session data corrupted' });
     }
-    const { playerHand, dealerHand } = req.session;
+    const playerHand = req.session.playerHand;
+    const dealerHand = req.session.dealerHand;
     while (calculateHandValue(dealerHand) < 17) {
         dealerHand.push(drawCard());
     }
@@ -194,7 +195,6 @@ app.post('/stand', authenticateJWT, (req, res) => {
         console.log('Stand result:', { playerHand, dealerHand, result }); // Debugging line
         res.json({ playerHand, dealerHand, result });
     });
-    console.log('Session data after stand: ', req.session); // Log session data
 });
 
 app.get('/account/:username', authenticateJWT, (req, res) => {
