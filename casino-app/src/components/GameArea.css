@@ -1,6 +1,34 @@
+.card {
+    width: 100px;
+    /* Set the desired width */
+    height: 150px;
+    /* Set the desired height */
+    margin: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* Ensure any overflow is hidden */
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Ensure the image covers the area */
+}
+
+.hand {
+    display: flex;
+}
+
 .game-area {
-    flex: 1;
-    background-color: #ecf0f1;
-    padding: 20px;
-    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dealer-area,
+.player-area {
+    margin-bottom: 20px;
 }

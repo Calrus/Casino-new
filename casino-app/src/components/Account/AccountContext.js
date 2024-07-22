@@ -9,7 +9,6 @@ export const AccountProvider = ({ children }) => {
     const register = async (username, password) => {
         try {
             await axios.post('http://localhost:3001/register', { username, password });
-            setAccount({ username, balance: 1000 });
             console.log('Registration successful');
         } catch (error) {
             if (error.response && error.response.status === 400) {
@@ -26,7 +25,9 @@ export const AccountProvider = ({ children }) => {
             console.log('Attempting login with:', username, password);
             const response = await axios.post('http://localhost:3001/login', { username, password });
             console.log('Login response:', response.data);
-            setAccount({ username, balance: response.data.balance });
+            const { token, balance } = response.data;
+            setAccount({ username, balance, token });
+            axios.defaults.headers.common['Authorization'] = token; // Set default header
             return true;
         } catch (error) {
             console.error('Login error:', error.response ? error.response.data : error.message);

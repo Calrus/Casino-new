@@ -13,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const SECRET_KEY = "secret";
+const SECRET_KEY = process.env.SECRET_KEY || 'defaultsecretkey';
 
 const db = new sqlite3.Database('./users.db');
 
@@ -32,6 +32,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false } // Set to true if using HTTPS
+
 }));
 
 app.post('/register', (req, res) => {
@@ -70,8 +71,9 @@ app.post('/login', (req, res) => {
 });
 
 const authenticateJWT = (req, res, next) => {
-    const token = req.headers.authorization.split(' ')[1];
-    if (token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
         jwt.verify(token, SECRET_KEY, (err, user) => {
             if (err) {
                 return res.sendStatus(403);
@@ -90,29 +92,33 @@ const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'
 const drawCard = () => {
     const suit = suits[Math.floor(Math.random() * suits.length)];
     const value = values[Math.floor(Math.random() * values.length)];
-    return { suit, value: value === 'A' ? 11 : ['K', 'Q', 'J'].includes(value) ? 10 : parseInt(value, 10) };
+    return { suit, value: value === 'A' ? 'Ace' : ['K', 'Q', 'J'].includes(value) ? 10 : parseInt(value, 10) };
 };
+
 
 const calculateHandValue = (hand) => {
     let value = 0;
     let numAces = 0;
 
+    // First, calculate the initial value and count the number of Aces
     hand.forEach(card => {
-        if (card.value === 11) {
+        if (card.value === 'Ace') {
             numAces += 1;
-            value += 11;
+            value += 11; // Initially count Ace as 11
         } else {
             value += card.value;
         }
     });
 
+    // Adjust the value of Aces from 11 to 1 if the total value exceeds 21
     while (value > 21 && numAces > 0) {
-        value -= 10;
+        value -= 10; // Convert an Ace from 11 to 1
         numAces -= 1;
     }
 
     return value;
 };
+
 
 const dealInitialCards = () => {
     const playerHand = [drawCard(), drawCard()];
@@ -157,7 +163,8 @@ app.post('/hit', authenticateJWT, (req, res) => {
 });
 
 app.post('/stand', authenticateJWT, (req, res) => {
-    console.log('Session data on stand: ', req.session); // Log session data
+    console.log('Stand endpoint hit'); // Debugging line
+    console.log('Session data on stand: ', req.session.playerHand); // Log session data
     if (!req.session.playerHand || !req.session.dealerHand) {
         return res.status(400).json({ error: 'Game not started' });
     }
@@ -184,8 +191,10 @@ app.post('/stand', authenticateJWT, (req, res) => {
         } else {
             result = 'Push!';
         }
+        console.log('Stand result:', { playerHand, dealerHand, result }); // Debugging line
         res.json({ playerHand, dealerHand, result });
     });
+    console.log('Session data after stand: ', req.session); // Log session data
 });
 
 app.get('/account/:username', authenticateJWT, (req, res) => {
