@@ -27,6 +27,7 @@ const Blackjack = () => {
                 });
                 setPlayerHand(response.data.playerHand);
                 setDealerHand(response.data.dealerHand);
+                setBetAmount(response.data.betAmount);
                 setGameStatus('playing');
                 setResult('');
                 setDealerSecondCardHidden(true);
@@ -44,7 +45,20 @@ const Blackjack = () => {
         }
     }, [account]);
 
+    const resetGame = () => {
+        console.log('Resetting game, setting gameStatus to betting');
+        setPlayerHand([]);
+        setDealerHand([]);
+        setGameStatus('betting');
+        setResult('');
+        setDealerSecondCardHidden(true);
+    };
+
     const handleBet = async () => {
+        if (gameStatus === 'finished') {
+            resetGame();
+        }
+
         if (betAmount > account.balance) {
             alert('Insufficient balance to place the bet.');
             return;
@@ -55,7 +69,7 @@ const Blackjack = () => {
 
         const token = localStorage.getItem('token');
         try {
-            const response = await axios.post('http://localhost:3001/game/start-game', {}, {
+            const response = await axios.post('http://localhost:3001/game/start-game', { betAmount }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setPlayerHand(response.data.playerHand);
@@ -86,6 +100,7 @@ const Blackjack = () => {
             setPlayerHand(response.data.playerHand);
             if (response.data.result) {
                 setResult(response.data.result);
+                console.log('Player hand result:', response.data.result);
                 setGameStatus('finished');
                 setDealerSecondCardHidden(false);
             }
@@ -105,16 +120,28 @@ const Blackjack = () => {
             const response = await axios.post('http://localhost:3001/game/stand', {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            console.log('Stand response:', response.data); // Log the response data
             setPlayerHand(response.data.playerHand);
             setDealerHand(response.data.dealerHand);
             setResult(response.data.result);
+            if (response.data.newBalance !== undefined) {
+                await updateBalance(account.username, response.data.newBalance);
+            }
             setGameStatus('finished');
+            setDealerSecondCardHidden(false);
         } catch (error) {
             console.error('Error standing:', error.response);
         } finally {
             setIsUpdating(false); // Enable buttons
         }
     };
+
+    useEffect(() => {
+        if (gameStatus === 'finished') {
+            console.log('Game status is finished, re-enabling bet button');
+            // Re-enable the bet button without clearing the hands
+        }
+    }, [gameStatus]);
 
     return (
         <div className="blackjack">

@@ -2,19 +2,25 @@ import React from 'react';
 import '../GameArea.css';
 
 const calculateHandValue = (hand) => {
+    if (!hand || !Array.isArray(hand)) {
+        return 0;
+    }
+
     let value = 0;
     let numAces = 0;
 
     hand.forEach(card => {
-        if (card && card.value) {
-            if (card.value === 'Ace') {
-                numAces += 1;
-                value += 11; // Initially count Ace as 11
-            } else if (['Jack', 'Queen', 'King'].includes(card.value)) {
-                value += 10; // Face cards are worth 10
-            } else {
-                value += parseInt(card.value, 10); // Ensure numeric value for other cards
-            }
+        if (!card || !card.value) {
+            return;
+        }
+
+        if (card.value === 'Ace') {
+            numAces += 1;
+            value += 11; // Initially count Ace as 11
+        } else if (['Jack', 'Queen', 'King'].includes(card.value)) {
+            value += 10; // Face cards are worth 10
+        } else {
+            value += parseInt(card.value, 10); // Ensure numeric value for other cards
         }
     });
 
@@ -27,7 +33,7 @@ const calculateHandValue = (hand) => {
     return value;
 };
 
-const GameArea = ({ playerHand, dealerHand, result, dealerSecondCardHidden }) => {
+const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHidden }) => {
     const getCardImage = (card) => {
         if (card.suit === 'hidden' && card.value === 'hidden') {
             return '/cards/back.png';
@@ -45,7 +51,7 @@ const GameArea = ({ playerHand, dealerHand, result, dealerSecondCardHidden }) =>
                 <div className="hand">
                     {dealerHand.map((card, index) => (
                         <div key={index} className="card">
-                            <img src={getCardImage(card)} alt={`${card?.value} of ${card?.suit}`} />
+                            <img src={getCardImage(card)} alt={`${card.value} of ${card.suit}`} />
                         </div>
                     ))}
                 </div>
@@ -58,7 +64,7 @@ const GameArea = ({ playerHand, dealerHand, result, dealerSecondCardHidden }) =>
                 <div className="hand">
                     {playerHand.map((card, index) => (
                         <div key={index} className="card">
-                            <img src={getCardImage(card)} alt={`${card?.value} of ${card?.suit}`} />
+                            <img src={getCardImage(card)} alt={`${card.value} of ${card.suit}`} />
                         </div>
                     ))}
                 </div>
