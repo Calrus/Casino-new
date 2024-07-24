@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import '../GameArea.css';
 
 const calculateHandValue = (hand) => {
@@ -33,7 +33,21 @@ const calculateHandValue = (hand) => {
     return value;
 };
 
-const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHidden }) => {
+const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHidden, gameStatus }) => {
+    const [handResult, setHandResult] = useState(null);
+
+    useEffect(() => {
+        if (result) {
+            setHandResult(result);
+        }
+    }, [result]);
+
+    useEffect(() => {
+        if (gameStatus === 'playing') {
+            setHandResult(null);
+        }
+    }, [gameStatus]);
+
     const getCardImage = (card) => {
         if (card.suit === 'hidden' && card.value === 'hidden') {
             return '/cards/back.png';
@@ -43,6 +57,13 @@ const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHi
 
     const playerHandValue = calculateHandValue(playerHand);
     const dealerHandValue = calculateHandValue(dealerHand);
+
+    const getResultColor = () => {
+        if (handResult === 'Player Wins!') return 'green';
+        if (handResult === 'Player Busts!' || handResult === 'Dealer Wins!') return 'red';
+        if (handResult === 'Push!') return 'yellow';
+        return '';
+    };
 
     return (
         <div className="game-area">
@@ -68,11 +89,11 @@ const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHi
                         </div>
                     ))}
                 </div>
-                <div className="hand-value">
+                <div className="hand-value" style={{ backgroundColor: getResultColor() }}>
                     <p>Value: {playerHandValue}</p>
                 </div>
             </div>
-            {result && <h2>{result}</h2>}
+            {handResult && <h2>{handResult}</h2>}
         </div>
     );
 };

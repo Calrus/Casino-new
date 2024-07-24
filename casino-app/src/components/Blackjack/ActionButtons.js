@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaHandPaper, FaHandRock, FaHandScissors, FaDollarSign } from 'react-icons/fa';
 
-const ActionButtons = ({ onHit, onStand, onPlaceBet, betDisabled, actionDisabled }) => {
+const ActionButtons = ({ onHit, onStand, onPlaceBet, betDisabled, actionDisabled, gameStatus }) => {
+    useEffect(() => {
+        if (gameStatus === 'finished') {
+            // Enable the bet button
+            betDisabled = false;
+        }
+    }, [gameStatus]);
+
     return (
         <div className="action-buttons">
             <div className="actions">
