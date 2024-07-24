@@ -58,8 +58,9 @@ const Blackjack = () => {
             setPlayerHand(response.data.playerHand);
             if (response.data.result) {
                 setResult(response.data.result);
-                setGameStatus('finished');
-                setDealerSecondCardHidden(false);
+                setGameStatus(response.data.gameStatus); // Use gameStatus from response
+                setDealerHand(response.data.dealerHand); // Update dealer's hand to reveal second card
+                setDealerSecondCardHidden(false); // Reveal the dealer's second card
             }
         } catch (error) {
             console.error('Error hitting:', error.response); // Log the error response
@@ -80,6 +81,11 @@ const Blackjack = () => {
             setDealerHand(response.data.dealerHand);
             setResult(response.data.result);
             setGameStatus('finished');
+            setDealerSecondCardHidden(false); // Reveal the dealer's second card
+
+            // Update balance after game ends
+            const newBalance = response.data.newBalance;
+            await updateBalance(account.username, newBalance);
         } catch (error) {
             console.error('Error standing:', error.response); // Log the error response
         } finally {

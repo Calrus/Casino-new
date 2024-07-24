@@ -56,7 +56,7 @@ const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHi
     };
 
     const playerHandValue = calculateHandValue(playerHand);
-    const dealerHandValue = calculateHandValue(dealerHand);
+    const dealerHandValue = dealerSecondCardHidden ? calculateHandValue([dealerHand[0]]) : calculateHandValue(dealerHand);
 
     const getResultColor = () => {
         if (handResult === 'Player Wins!') return 'green';
@@ -77,7 +77,7 @@ const GameArea = ({ playerHand = [], dealerHand = [], result, dealerSecondCardHi
                     ))}
                 </div>
                 <div className="hand-value">
-                    <p>Value: {dealerSecondCardHidden ? calculateHandValue([dealerHand[0]]) : dealerHandValue}</p>
+                    <p>Value: {dealerHandValue}</p>
                 </div>
             </div>
             <div className="player-area">
