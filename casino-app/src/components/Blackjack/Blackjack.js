@@ -28,12 +28,20 @@ const Blackjack = () => {
                 setPlayerHand(response.data.playerHand);
                 setDealerHand(response.data.dealerHand);
                 setBetAmount(response.data.betAmount);
-                setGameStatus('playing');
+
+                // Set game status based on the response
+                if (response.data.gameStatus) {
+                    setGameStatus(response.data.gameStatus);
+                } else {
+                    setGameStatus('betting');
+                }
+
                 setResult('');
-                setDealerSecondCardHidden(true);
+                setDealerSecondCardHidden(response.data.gameStatus !== 'finished');
             } catch (error) {
                 if (error.response && error.response.status === 404) {
                     console.log('No game in progress');
+                    setGameStatus('betting'); // Ensure gameStatus is set to 'betting' if no game is in progress
                 } else {
                     console.error('Error fetching current hand:', error.response);
                 }
@@ -44,6 +52,15 @@ const Blackjack = () => {
             fetchCurrentHand();
         }
     }, [account]);
+
+    useEffect(() => {
+        const logGameStatus = () => {
+            console.log(`Current game status: ${gameStatus}`);
+        };
+        const intervalId = setInterval(logGameStatus, 5000); // Log every 5 seconds
+
+        return () => clearInterval(intervalId); // Clean up on unmount
+    }, [gameStatus]);
 
     const resetGame = () => {
         console.log('Resetting game, setting gameStatus to betting');
@@ -74,7 +91,7 @@ const Blackjack = () => {
             });
             setPlayerHand(response.data.playerHand);
             setDealerHand(response.data.dealerHand);
-            setGameStatus('playing');
+            setGameStatus('playing'); // Set game status to 'playing' after hands are set
             setResult('');
             setDealerSecondCardHidden(true);
         } catch (error) {
@@ -150,13 +167,13 @@ const Blackjack = () => {
                 <BetSection
                     betAmount={betAmount}
                     onBetChange={handleBetChange}
-                    disabled={gameStatus !== 'betting'}
+                    disabled={gameStatus !== 'betting' && gameStatus !== 'finished'}
                 />
                 <ActionButtons
                     onHit={handleHit}
                     onStand={handleStand}
                     onPlaceBet={handleBet}
-                    betDisabled={gameStatus !== 'betting'}
+                    betDisabled={gameStatus !== 'betting' && gameStatus !== 'finished'}
                     actionDisabled={gameStatus !== 'playing' || isUpdating}
                 />
             </div>

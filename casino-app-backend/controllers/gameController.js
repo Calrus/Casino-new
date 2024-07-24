@@ -13,17 +13,41 @@ const db = new sqlite3.Database('./users.db');
 
 router.post('/start-game', authenticateJWT, (req, res) => {
     const username = req.user.username;
-    const { playerHand, dealerHand } = dealInitialCards();
+    const betAmount = req.body.betAmount;
 
-    gameStates[username] = {
-        playerHand,
-        dealerHand,
-        betAmount: req.body.betAmount,
-        gameStatus: 'playing'
-    };
+    db.get('SELECT balance FROM users WHERE username = ?', [username], (err, row) => {
+        if (err) {
+            console.error('Error fetching user balance:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch user balance' });
+        }
 
-    console.log('Game started:', gameStates[username]);
-    res.json({ playerHand, dealerHand: [dealerHand[0], { suit: 'hidden', value: 'hidden' }] });
+        const currentBalance = row.balance;
+        if (currentBalance < betAmount) {
+            return res.status(400).json({ error: 'Insufficient balance' });
+        }
+
+        const newBalance = currentBalance - betAmount;
+
+        db.run('UPDATE users SET balance = ? WHERE username = ?', [newBalance, username], function (err) {
+            if (err) {
+                console.error('Error updating balance:', err.message);
+                return res.status(500).json({ error: 'Failed to update balance' });
+            }
+
+            const { playerHand, dealerHand } = dealInitialCards();
+
+            gameStates[username] = {
+                playerHand,
+                dealerHand,
+                betAmount,
+                gameStatus: 'playing'
+            };
+
+            console.log('Game started:', gameStates[username]);
+            console.log(`User ${username}'s balance after placing bet: ${newBalance}`); // Log the user's balance after placing the bet
+            res.json({ playerHand, dealerHand: [dealerHand[0], { suit: 'hidden', value: 'hidden' }] });
+        });
+    });
 });
 
 router.post('/hit', authenticateJWT, (req, res) => {
@@ -44,9 +68,9 @@ router.post('/hit', authenticateJWT, (req, res) => {
     const playerHandValue = calculateHandValue(playerHand);
     if (playerHandValue > 21) {
         gameState.gameStatus = 'finished';
-        res.json({ playerHand, result: 'Player Busts!' });
+        res.json({ playerHand, result: 'Player Busts!', gameStatus: gameState.gameStatus });
     } else {
-        res.json({ playerHand });
+        res.json({ playerHand, gameStatus: gameState.gameStatus });
     }
 });
 
@@ -88,7 +112,7 @@ router.post('/stand', authenticateJWT, (req, res) => {
             newBalance = currentBalance; // No change
         } else if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
             result = 'Player Wins!';
-            newBalance = currentBalance + betAmount * 2; // Player wins the bet
+            newBalance = currentBalance + betAmount * 2; // Player wins the bet (returning bet + winnings)
         } else if (playerHandValue < dealerHandValue) {
             result = 'Dealer Wins!';
             newBalance = currentBalance; // No change
@@ -105,7 +129,8 @@ router.post('/stand', authenticateJWT, (req, res) => {
 
             gameState.gameStatus = 'finished';
             console.log('Game status set to finished:', gameState);
-            res.json({ playerHand, dealerHand, result, newBalance });
+            console.log(`User ${username}'s balance after game end: ${newBalance}`); // Log the user's balance after the game ends
+            res.json({ playerHand, dealerHand, result, newBalance, gameStatus: gameState.gameStatus });
         });
     });
 });
@@ -118,10 +143,13 @@ router.get('/current-hand', authenticateJWT, (req, res) => {
         return res.status(404).json({ error: 'No game in progress' });
     }
 
+    const dealerHand = gameState.gameStatus === 'finished' ? gameState.dealerHand : [gameState.dealerHand[0], { suit: 'hidden', value: 'hidden' }];
+
     res.json({
         playerHand: gameState.playerHand,
-        dealerHand: [gameState.dealerHand[0], { suit: 'hidden', value: 'hidden' }],
-        betAmount: gameState.betAmount
+        dealerHand: dealerHand,
+        betAmount: gameState.betAmount,
+        gameStatus: gameState.gameStatus // Include gameStatus in response
     });
 });
 
