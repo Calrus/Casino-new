@@ -1,5 +1,5 @@
 const express = require('express');
-const { drawCard, calculateHandValue } = require('../utils/handUtils');
+const { drawCard, calculateHandValue, dealInitialCards } = require('../utils/handUtils');
 const authenticateJWT = require('../middleware/authenticateJWT');
 
 const router = express.Router();
@@ -32,6 +32,7 @@ router.post('/hit', authenticateJWT, (req, res) => {
             console.error('Error saving session:', err);
             return res.status(500).json({ error: 'Failed to save session' });
         }
+        console.log('Updated session data after hit:', req.session); // Log session data
         const playerHandValue = calculateHandValue(playerHand);
         if (playerHandValue > 21) {
             res.json({ playerHand, result: 'Player Busts!' });
@@ -58,6 +59,7 @@ router.post('/stand', authenticateJWT, (req, res) => {
             console.error('Error saving session:', err);
             return res.status(500).json({ error: 'Failed to save session' });
         }
+        console.log('Updated session data after stand:', req.session); // Log session data
         const playerHandValue = calculateHandValue(playerHand);
         const dealerHandValue = calculateHandValue(dealerHand);
 

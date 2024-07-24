@@ -3,11 +3,12 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
 const dotenv = require('dotenv');
-const { db } = require('./models/db');
+const path = require('path');
 
 const authRoutes = require('./controllers/authController');
 const gameRoutes = require('./controllers/gameController');
 const userRoutes = require('./controllers/userController');
+const logSession = require('./middleware/logSession');
 
 dotenv.config();
 
@@ -23,6 +24,9 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false } // Set to true if using HTTPS
 }));
+
+// Log session data middleware
+app.use(logSession);
 
 // Routes
 app.use('/auth', authRoutes);

@@ -8,7 +8,7 @@ export const AccountProvider = ({ children }) => {
 
     const register = async (username, password) => {
         try {
-            await axios.post('http://localhost:3001/register', { username, password });
+            await axios.post('http://localhost:3001/auth/register', { username, password });
             console.log('Registration successful');
         } catch (error) {
             if (error.response && error.response.status === 400) {
@@ -23,7 +23,7 @@ export const AccountProvider = ({ children }) => {
     const login = async (username, password) => {
         try {
             console.log('Attempting login with:', username, password);
-            const response = await axios.post('http://localhost:3001/login', { username, password });
+            const response = await axios.post('http://localhost:3001/auth/login', { username, password });
             console.log('Login response:', response.data);
             const { token, balance } = response.data;
             setAccount({ username, balance, token });

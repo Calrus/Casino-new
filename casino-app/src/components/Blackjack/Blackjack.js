@@ -28,7 +28,7 @@ const Blackjack = () => {
         await updateBalance(account.username, account.balance - betAmount);
 
         try {
-            const response = await axios.post('http://localhost:3001/start-game', {}, {
+            const response = await axios.post('http://localhost:3001/game/start-game', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             console.log('Start game response:', response.data); // Log the response for debugging
@@ -55,7 +55,7 @@ const Blackjack = () => {
         console.log(account.token);
 
         try {
-            const response = await axios.post('http://localhost:3001/hit', {}, {
+            const response = await axios.post('http://localhost:3001/game/hit', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             console.log('Hit response:', response.data); // Log the response for debugging
@@ -77,7 +77,7 @@ const Blackjack = () => {
         setIsUpdating(true); // Disable buttons
 
         try {
-            const response = await axios.post('http://localhost:3001/stand', {}, {
+            const response = await axios.post('http://localhost:3001/game/stand', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             console.log('Stand response:', response.data); // Log the response for debugging

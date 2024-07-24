@@ -1,9 +1,12 @@
-# Makefile to start both backend and frontend
+# Makefile
 
-start: start-backend start-frontend
-
-start-backend:
-	@cd casino-app-backend && npm install && node server.js &
+.PHONY: start-frontend start-backend
 
 start-frontend:
-	@cd casino-app && npm install && npm start
+	cd casino-app && npm start
+
+start-backend:
+	cd casino-app-backend && npm start
+
+start:
+	concurrently "make start-frontend" "make start-backend"
