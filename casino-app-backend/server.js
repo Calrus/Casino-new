@@ -2,13 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const dotenv = require('dotenv');
 const path = require('path');
+const logSession = require('./middleware/logSession'); // Import the middleware
 
 const authRoutes = require('./controllers/authController');
 const gameRoutes = require('./controllers/gameController');
 const userRoutes = require('./controllers/userController');
-const logSession = require('./middleware/logSession');
 
 dotenv.config();
 
@@ -19,14 +20,17 @@ app.use(bodyParser.json());
 const SECRET_KEY = process.env.SECRET_KEY || 'defaultsecretkey';
 
 app.use(session({
+    store: new SQLiteStore({
+        dir: path.join(__dirname, 'database'),
+        db: 'sessions.db'
+    }),
     secret: SECRET_KEY,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false } // Set to true if using HTTPS
 }));
 
-// Log session data middleware
-app.use(logSession);
+app.use(logSession); // Use the log session middleware
 
 // Routes
 app.use('/auth', authRoutes);

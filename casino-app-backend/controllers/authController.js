@@ -1,10 +1,26 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { db } = require('../models/db');
+const sqlite3 = require('sqlite3').verbose();
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const router = express.Router();
 const SECRET_KEY = process.env.SECRET_KEY || 'defaultsecretkey';
+
+// Initialize SQLite database
+const db = new sqlite3.Database('./users.db');
+
+db.serialize(() => {
+    db.run('CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE, password TEXT, balance INTEGER)', (err) => {
+        if (err) {
+            console.error('Error creating users table:', err.message);
+        } else {
+            console.log('Users table created or already exists.');
+        }
+    });
+});
 
 router.post('/register', (req, res) => {
     const { username, password } = req.body;
@@ -19,7 +35,7 @@ router.post('/register', (req, res) => {
             console.error('Error inserting user:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        console.log('User registered:', username, hashedPassword);
+        console.log('User registered:', username);
         res.status(201).json({ message: 'User registered successfully' });
     });
 });

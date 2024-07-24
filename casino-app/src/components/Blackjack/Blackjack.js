@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import BetSection from './BetSection';
 import ActionButtons from './ActionButtons';
@@ -18,6 +18,32 @@ const Blackjack = () => {
     const [dealerSecondCardHidden, setDealerSecondCardHidden] = useState(true); // Track if dealer's second card is hidden
     const [isUpdating, setIsUpdating] = useState(false); // Track if the state is updating
 
+    useEffect(() => {
+        const fetchCurrentHand = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await axios.get('http://localhost:3001/game/current-hand', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setPlayerHand(response.data.playerHand);
+                setDealerHand(response.data.dealerHand);
+                setGameStatus('playing');
+                setResult('');
+                setDealerSecondCardHidden(true);
+            } catch (error) {
+                if (error.response && error.response.status === 404) {
+                    console.log('No game in progress');
+                } else {
+                    console.error('Error fetching current hand:', error.response);
+                }
+            }
+        };
+
+        if (account && account.token) {
+            fetchCurrentHand();
+        }
+    }, [account]);
+
     const handleBet = async () => {
         if (betAmount > account.balance) {
             alert('Insufficient balance to place the bet.');
@@ -27,18 +53,18 @@ const Blackjack = () => {
         setPlayerBet(betAmount);
         await updateBalance(account.username, account.balance - betAmount);
 
+        const token = localStorage.getItem('token');
         try {
             const response = await axios.post('http://localhost:3001/game/start-game', {}, {
-                headers: { Authorization: `Bearer ${account.token}` },
+                headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('Start game response:', response.data); // Log the response for debugging
             setPlayerHand(response.data.playerHand);
             setDealerHand(response.data.dealerHand);
             setGameStatus('playing');
             setResult('');
             setDealerSecondCardHidden(true);
         } catch (error) {
-            console.error('Error starting game:', error.response); // Log the error response
+            console.error('Error starting game:', error.response);
         } finally {
             setIsUpdating(false); // Enable buttons
         }
@@ -52,13 +78,11 @@ const Blackjack = () => {
         if (isUpdating) return; // Prevent quick successive clicks
         setIsUpdating(true); // Disable buttons
 
-        console.log(account.token);
-
+        const token = localStorage.getItem('token');
         try {
             const response = await axios.post('http://localhost:3001/game/hit', {}, {
-                headers: { Authorization: `Bearer ${account.token}` },
+                headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('Hit response:', response.data); // Log the response for debugging
             setPlayerHand(response.data.playerHand);
             if (response.data.result) {
                 setResult(response.data.result);
@@ -66,7 +90,7 @@ const Blackjack = () => {
                 setDealerSecondCardHidden(false);
             }
         } catch (error) {
-            console.error('Error hitting:', error.response); // Log the error response
+            console.error('Error hitting:', error.response);
         } finally {
             setIsUpdating(false); // Enable buttons
         }
@@ -76,17 +100,17 @@ const Blackjack = () => {
         if (isUpdating) return; // Prevent quick successive clicks
         setIsUpdating(true); // Disable buttons
 
+        const token = localStorage.getItem('token');
         try {
             const response = await axios.post('http://localhost:3001/game/stand', {}, {
-                headers: { Authorization: `Bearer ${account.token}` },
+                headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('Stand response:', response.data); // Log the response for debugging
             setPlayerHand(response.data.playerHand);
             setDealerHand(response.data.dealerHand);
             setResult(response.data.result);
             setGameStatus('finished');
         } catch (error) {
-            console.error('Error standing:', error.response); // Log the error response
+            console.error('Error standing:', error.response);
         } finally {
             setIsUpdating(false); // Enable buttons
         }
