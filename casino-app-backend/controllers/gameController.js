@@ -86,6 +86,98 @@ router.post('/hit', authenticateJWT, (req, res) => {
     }
 });
 
+router.post('/double', authenticateJWT, async (req, res) => {
+    const username = req.user.username;
+    const gameState = gameStates[username];
+
+    if (!gameState || gameState.gameStatus !== 'playing') {
+        console.error('No game state found or game not in progress for user:', username);
+        return res.status(400).json({ error: 'Game not started or game state not found' });
+    }
+
+    try {
+        const row = await dbGet('SELECT balance FROM users WHERE username = ?', [username]);
+        const currentBalance = row.balance;
+        let betAmount = gameState.betAmount;
+
+        // Double the bet amount
+        const doubleBetAmount = betAmount * 2;
+
+        if (currentBalance < betAmount) {
+            return res.status(400).json({ error: 'Insufficient balance to double the bet' });
+        }
+
+        // Deduct the additional bet amount from the user's balance
+        const newBalance = currentBalance - betAmount;
+        await dbRun('UPDATE users SET balance = ? WHERE username = ?', [newBalance, username]);
+
+        // Update the game state with the new doubled bet amount
+        gameState.betAmount = doubleBetAmount;
+
+        // Draw one more card for the player and update the player's hand
+        const playerHand = gameState.playerHand;
+        playerHand.push(drawCard());
+        gameState.playerHand = playerHand;
+
+        console.log('Updated game state after double:', gameStates[username]);
+
+        const playerHandValue = calculateHandValue(playerHand);
+        if (playerHandValue > 21) {
+            gameState.gameStatus = 'finished';
+            res.json({
+                playerHand,
+                dealerHand: gameState.dealerHand,
+                result: 'Player Busts!',
+                gameStatus: 'finished',
+                newBalance
+            });
+        } else {
+            // Dealer plays their hand
+            const dealerHand = gameState.dealerHand;
+            while (calculateHandValue(dealerHand) < 17) {
+                dealerHand.push(drawCard());
+            }
+            gameState.dealerHand = dealerHand;
+
+            console.log('Updated game state after double:', gameStates[username]);
+
+            const dealerHandValue = calculateHandValue(dealerHand);
+
+            let result;
+            let finalBalance;
+
+            if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
+                result = 'Player Wins!';
+                finalBalance = newBalance + doubleBetAmount * 2; // Double the bet winnings
+            } else if (playerHandValue < dealerHandValue) {
+                result = 'Dealer Wins!';
+                finalBalance = newBalance; // No change
+            } else {
+                result = 'Push!';
+                finalBalance = newBalance + doubleBetAmount; // Return the doubled bet
+            }
+
+            console.log(`New balance for ${username}: ${finalBalance}`);
+
+            await dbRun('UPDATE users SET balance = ? WHERE username = ?', [finalBalance, username]);
+
+            gameState.gameStatus = 'finished';
+            console.log('Game status set to finished:', gameState);
+            console.log(`Updated balance for ${username}: ${finalBalance}`);
+            res.json({
+                playerHand,
+                dealerHand: gameState.dealerHand,
+                result,
+                newBalance: finalBalance
+            });
+        }
+    } catch (err) {
+        console.error('Error in double:', err.message);
+        res.status(500).json({ error: 'Failed to update balance' });
+    }
+});
+
+
 router.post('/stand', authenticateJWT, async (req, res) => {
     const username = req.user.username;
     const gameState = gameStates[username];

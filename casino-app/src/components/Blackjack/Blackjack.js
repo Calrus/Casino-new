@@ -69,6 +69,30 @@ const Blackjack = () => {
         }
     };
 
+    const handleDouble = async () => {
+        if (isUpdating) return; // Prevent quick successive clicks
+        setIsUpdating(true); // Disable buttons
+
+        try {
+            const response = await axios.post('http://localhost:3001/game/double', {}, {
+                headers: { Authorization: `Bearer ${account.token}` },
+            });
+            setPlayerHand(response.data.playerHand);
+            setDealerHand(response.data.dealerHand);
+            setResult(response.data.result);
+            setGameStatus('finished'); // Game should be finished after double
+            setDealerSecondCardHidden(false); // Reveal the dealer's second card
+
+            // Update balance after game ends
+            const newBalance = response.data.newBalance;
+            await updateBalance(account.username, newBalance);
+        } catch (error) {
+            console.error('Error doubling:', error.response); // Log the error response
+        } finally {
+            setIsUpdating(false); // Enable buttons
+        }
+    };
+
     const handleStand = async () => {
         if (isUpdating) return; // Prevent quick successive clicks
         setIsUpdating(true); // Disable buttons
@@ -112,6 +136,7 @@ const Blackjack = () => {
                 />
                 <ActionButtons
                     onHit={handleHit}
+                    onDouble={handleDouble}
                     onStand={handleStand}
                     onPlaceBet={handleBet}
                     betDisabled={gameStatus !== 'betting'}
