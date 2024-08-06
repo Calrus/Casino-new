@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../GameArea.css';
+import './GameArea.css';
 
 const calculateHandValue = (hand) => {
     if (!hand || !Array.isArray(hand)) {

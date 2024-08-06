@@ -11,6 +11,9 @@ const Sidebar = () => {
                     <Link to="/blackjack">Blackjack</Link>
                 </li>
                 <li>
+                    <Link to="/coinflip">Coinflip</Link>
+                </li>
+                <li>
                     <Link to="/login">Login</Link>
                 </li>
                 <li>

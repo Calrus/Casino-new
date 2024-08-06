@@ -8,7 +8,8 @@ const path = require('path');
 const logSession = require('./middleware/logSession'); // Import the middleware
 
 const authRoutes = require('./controllers/authController');
-const gameRoutes = require('./controllers/gameController');
+const blackjackRoutes = require('./controllers/blackjack/gameController');
+const coinFlipRoutes = require('./controllers/coinflip/coinFlip');
 const userRoutes = require('./controllers/userController');
 
 dotenv.config();
@@ -34,7 +35,8 @@ app.use(logSession); // Use the log session middleware
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/game', gameRoutes);
+app.use('/game/blackjack', blackjackRoutes);
+app.use('/game/coinflip', coinFlipRoutes);
 app.use('/account', userRoutes);
 
 const PORT = process.env.PORT || 3001;

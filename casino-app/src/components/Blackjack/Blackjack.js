@@ -28,7 +28,7 @@ const Blackjack = () => {
         await updateBalance(account.username, account.balance - betAmount);
 
         try {
-            const response = await axios.post('http://localhost:3001/game/start-game', { betAmount }, {
+            const response = await axios.post('http://localhost:3001/game/blackjack/start-game', { betAmount }, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             setPlayerHand(response.data.playerHand);
@@ -52,7 +52,7 @@ const Blackjack = () => {
         setIsUpdating(true); // Disable buttons
 
         try {
-            const response = await axios.post('http://localhost:3001/game/hit', {}, {
+            const response = await axios.post('http://localhost:3001/game/blackjack/hit', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             setPlayerHand(response.data.playerHand);
@@ -74,7 +74,7 @@ const Blackjack = () => {
         setIsUpdating(true); // Disable buttons
 
         try {
-            const response = await axios.post('http://localhost:3001/game/double', {}, {
+            const response = await axios.post('http://localhost:3001/game/blackjack/double', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             setPlayerHand(response.data.playerHand);
@@ -98,7 +98,7 @@ const Blackjack = () => {
         setIsUpdating(true); // Disable buttons
 
         try {
-            const response = await axios.post('http://localhost:3001/game/stand', {}, {
+            const response = await axios.post('http://localhost:3001/game/blackjack/stand', {}, {
                 headers: { Authorization: `Bearer ${account.token}` },
             });
             setPlayerHand(response.data.playerHand);

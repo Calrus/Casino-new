@@ -1,6 +1,6 @@
 const express = require('express');
-const { drawCard, calculateHandValue, dealInitialCards } = require('../utils/handUtils');
-const authenticateJWT = require('../middleware/authenticateJWT');
+const { drawCard, calculateHandValue, dealInitialCards } = require('../../utils/handUtils');
+const authenticateJWT = require('../../middleware/authenticateJWT');
 const sqlite3 = require('sqlite3').verbose();
 
 const router = express.Router();
